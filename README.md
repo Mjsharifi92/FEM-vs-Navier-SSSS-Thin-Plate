@@ -1,180 +1,189 @@
+Convergence Analysis: FEM vs. Navier Solution — SSSS Thin Plate (Steel)
 
-# Convergence Analysis: FEM vs. Navier Solution — SSSS Thin Plate (Steel)
+This repository validates a Kirchhoff–Love thin-plate FEM against the classical Navier double-sine series for a square, simply-supported (SSSS) steel plate under a uniform transverse load. It includes a mesh-refinement study for FEM and a truncation-study for the Navier series, with figures and detailed interpretation.
+1) Problem definition
 
-This repository validates a **Kirchhoff–Love thin-plate FEM** against the **classical Navier double-sine series** for a **square, simply‑supported (SSSS) steel plate** under a **uniform transverse load**. It includes a mesh‑refinement study for FEM and a truncation‑study for the Navier series, with figures and detailed interpretation.
+Geometry & loading (non-dimensionalized with side length a):
+A square plate a × a with thickness t << a, uniform pressure q.
 
----
+Material (steel):
+E = 210 GPa
+ν = 0.3
 
-## 1) Problem definition
+Flexural rigidity:
 
-**Geometry & loading** (non‑dimensionalized with side length \(a\)): a square plate \(a \times a\) with thickness \(t \ll a\), uniform pressure \(q\).  
-**Material** (steel): \(E=210\ \text{GPa}\), \(\nu=0.3\).  
-**Flexural rigidity**:  
-\[
-D=\frac{Et^3}{12(1-\nu^2)} \quad \Rightarrow \quad D=1.9230\times 10^4\ \text{N·m} \quad \text{for } t=0.01\ \text{m}.
-\]
+D = E * t^3 / ( 12 * (1 - ν^2) )
+D = 1.9230 × 10^4 N·m   (for t = 0.01 m)
 
-**Governing equation (Kirchhoff–Love)**:
-\[
-D\nabla^4 w = q \quad \text{in } \Omega=[0,a]\times[0,a].
-\]
+Governing equation (Kirchhoff–Love):
 
-**SSSS boundary conditions** (on all edges):  
-\[
-w=0, \qquad M_n=0
-\]
-with the bending moments \(M_x=-D(\partial^2 w/\partial x^2 + \nu\,\partial^2 w/\partial y^2)\) and \(M_y\) defined analogously.
+D ∇⁴ w = q   in Ω = [0,a] × [0,a]
 
-The reference **exact, non‑dimensional central deflection** for a uniformly loaded SSSS thin plate is
-\[
-\boxed{\ \ (w_\mathrm{c}\,D)/(q\,a^4)=0.00406235\ \ }.
-\]
+SSSS boundary conditions (on all edges):
 
----
+w = 0,    M_n = 0
 
-## 2) Navier solution (analytical benchmark)
+where bending moments are:
+
+M_x = -D [ (∂²w/∂x²) + ν (∂²w/∂y²) ]
+M_y = -D [ (∂²w/∂y²) + ν (∂²w/∂x²) ]
+
+Reference exact central deflection (non-dimensional):
+
+(w_c * D) / (q * a^4) = 0.00406235
+
+2) Navier solution (analytical benchmark)
 
 For SSSS plates, the deflection admits a double sine series (odd terms only):
-\[
-w(x,y)=\sum_{m=1,3,5,\dots}^{M}\ \sum_{n=1,3,5,\dots}^{M}\ W_{mn}\,
-\sin\!\left(\frac{m\pi x}{a}\right)\sin\!\left(\frac{n\pi y}{a}\right),
-\]
-\[
-W_{mn}=\frac{16q}{\pi^6 D\,m^2n^2\left(\frac{m^2}{a^2}+\frac{n^2}{a^2}\right)^2}.
-\]
-At the plate centre \((a/2,a/2)\) every sine term equals \(1\) (for odd indices), giving rapid convergence as \(M\) increases. Small \(M\) **overestimates** the true central deflection due to truncation.
 
-**Code parameters used here**
-- Odd truncations \(M=\{3,5,7,\dots,41\}\)
-- Reported value in the plot for large \(M\): \(0.004062\) (matches the exact constant to \(<2\times10^{-8}\)).
+w(x,y) = Σ_{m=1,3,...,M} Σ_{n=1,3,...,M} W_mn *
+         sin(mπx/a) * sin(nπy/a)
 
----
+W_mn = 16q / [ π^6 * D * m² * n² * ( m²/a² + n²/a² )² ]
 
-## 3) FEM formulation (our implementation)
+At the plate centre (a/2,a/2) every sine term equals 1 (for odd indices).
+Small M overestimates the true central deflection due to truncation.
 
-We use a **Kirchhoff thin‑plate element** requiring \(C^1\) continuity. A practical way is a 4‑node \(C^1\) rectangular element with **Hermite polynomials** in each direction and nodal DOFs
-\(\{w,\theta_x,\theta_y\}\).
+Code parameters used here:
 
-**Element matrices**
-\[
-K_e=\iint_{\Omega_e} B^\top D_\mathrm{plate} B\,\mathrm{d}\Omega,\qquad
-D_\mathrm{plate}=\begin{bmatrix}
-D & \nu D & 0\\
-\nu D & D & 0\\
-0 & 0 & \frac{1-\nu}{2}D
-\end{bmatrix}.
-\]
-**Loads** for uniform \(q\): \(f_e=\iint_{\Omega_e}N^\top q\,\mathrm{d}\Omega\).
+    Odd truncations: M = {3,5,7,...,41}
 
-**Boundary conditions (SSSS)**
-- \(w=0\) along all four edges (essential).  
-- \(\theta_x=0\) on \(y=0,a\) and \(\theta_y=0\) on \(x=0,a\) to enforce simply‑supported rotations consistently.  
-- Bending moments become natural BCs and vanish on edges.
+    Large M → 0.004062 (matches the exact constant to < 2×10⁻⁸)
 
-**Mesh refinement**
-We use an \(n\times n\) grid of equal rectangles; element size \(h=a/n\).  
-Tested \(n=\{8,10,12,16,20,24,32,40\}\).
+3) FEM formulation
 
----
+We use a Kirchhoff thin-plate element requiring C¹ continuity.
+A practical way is a 4-node C¹ rectangular element with Hermite polynomials in each direction and nodal DOFs:
 
-## 4) Results — figures and detailed discussion
+{ w, θ_x, θ_y }
 
-### Figure 1 — Convergence: FEM (bottom x‑axis) vs. Navier (top x‑axis)
-<p align="center">
-  <img src="./1.png" alt="Convergence: FEM vs Navier" width="720">
-</p>
+Element matrices:
 
-**What the plot shows**  
-- **Blue curve** (left axis): FEM central deflection vs. mesh size \(h=a/n\).
-- **Orange curve** (top axis): Navier central deflection vs. truncation parameter \(M\) (plotted as \(1/M\), odd values).
-- **Dashed line**: exact non‑dimensional constant \(0.00406235\).
+K_e = ∫∫( Bᵀ D_plate B ) dΩ
 
-**Interpretation**  
-- **FEM starts below** the exact value for coarse meshes (slightly **too stiff** numerically), then increases monotonically and asymptotes to the exact constant.  
-- **Navier starts above** the exact value for small \(M\) (series **truncation bias**), then decreases to the limit as \(M\) grows.  
-- The **crossing near the dashed line** confirms both methods target the same limit from opposite sides, providing a strong **code‑to‑theory validation**.
+D_plate =
+[  D      νD       0
+   νD     D        0
+   0      0   (1-ν)/2 * D ]
 
-**Representative numbers (non‑dimensional \(w_cD/(qa^4)\))**
-- FEM: \(n=\{8,12,16,24,40\}\Rightarrow\{0.00388,0.00396,0.00402,0.004054,0.004061\}\).  
-- Navier: \(M=\{3,5,7,41\}\Rightarrow\{0.004152,0.004120,0.004097,0.004062\}\).
+Loads for uniform q:
 
----
+f_e = ∫∫( Nᵀ q ) dΩ
 
-### Figure 2 — 3D deformation surface (FEM, fine mesh)
-<p align="center">
-  <img src="./2.png" alt="3D deformation surface (FEM fine mesh)" width="540">
-</p>
+Boundary conditions (SSSS):
 
-**What to look at**  
-- Smooth, bowl‑shaped surface with **symmetry about both midlines**, consistent with SSSS edges.  
-- Maximum deflection at the centre; zero along edges.  
-- The plotted **normalized central value** matches the constant within \(\approx 2\times10^{-3}\) relative error on the finest grid shown.
+    w = 0 along all four edges (essential)
 
-**FEM settings behind this plot**
-- Fine grid \(n=40\) (i.e., \(h=0.025\,a\)).  
-- Consistent Hermite interpolation for \(w,\theta_x,\theta_y\).  
-- Uniform load integration with \(2\times2\) Gauss points per rectangle (sufficient for constant \(q\)).
+    θ_x = 0 on y = 0,a
 
----
+    θ_y = 0 on x = 0,a
 
-### Figure 3 — Filled contour of deflection (FEM, fine mesh)
-<p align="center">
-  <img src="./3.png" alt="Deflection contour (FEM fine mesh)" width="640">
-</p>
+    Bending moments become natural BCs and vanish on edges
 
-**Reading the contour**  
-- Concentric contours centred at \((a/2,a/2)\) show a **monotone decrease** toward edges.  
-- The **circular‑like pattern** in the middle becomes slightly square near edges, a typical feature for SSSS plates under uniform pressure.  
-- Zero contour on every boundary confirms correct enforcement of \(w=0\).
+Mesh refinement:
+We use an n × n grid of equal rectangles; element size h = a/n.
+Tested n = {8,10,12,16,20,24,32,40}.
+4) Results — figures and detailed discussion
+Figure 1 — Convergence: FEM (bottom x-axis) vs. Navier (top x-axis)
 
-**Why both 3D and contour help**  
-- The 3D surface conveys global smoothness and qualitative shape (good for talks).  
-- The contour makes **gradients** and **symmetry** obvious (good for reports/code verification).
+Convergence: FEM vs Navier
 
----
+What the plot shows
 
-## 5) Numerical table (selected points)
+    Blue curve (bottom x-axis): FEM central deflection vs. mesh size h = a/n
 
-| mesh \(n\) | \(h=a/n\) | FEM (nd) | series \(M\) | Navier (nd) | exact nd |
-|:--:|:--:|:--:|:--:|:--:|:--:|
-| 8  | 0.125  | 0.00388 | 3  | 0.004152 | 0.00406235 |
-| 12 | 0.0833 | 0.00396 | 5  | 0.004120 | 0.00406235 |
-| 16 | 0.0625 | 0.00402 | 7  | 0.004097 | 0.00406235 |
-| 24 | 0.0417 | 0.004054| 21 | 0.004067 | 0.00406235 |
-| 40 | 0.0250 | 0.004061| 41 | 0.004062 | 0.00406235 |
+    Orange curve (top x-axis): Navier central deflection vs. truncation parameter M (plotted as 1/M, odd values)
+
+    Dashed line: exact non-dimensional constant 0.00406235
+
+Interpretation
+
+    FEM starts below the exact value for coarse meshes (slightly too stiff numerically), then increases monotonically and asymptotes to the exact constant.
+
+    Navier starts above the exact value for small M (series truncation bias), then decreases to the limit as M grows.
+
+    The crossing near the dashed line confirms both methods target the same limit from opposite sides, providing a strong code-to-theory validation.
+
+Representative numbers (non-dimensional w_c D / (q a^4)):
+
+    FEM: n = {8,12,16,24,40} → {0.00388, 0.00396, 0.00402, 0.004054, 0.004061}
+
+    Navier: M = {3,5,7,41} → {0.004152, 0.004120, 0.004097, 0.004062}
+
+Figure 2 — 3D deformation surface (FEM, fine mesh)
+
+3D deformation surface
+
+What to look at
+
+    Smooth, bowl-shaped surface with symmetry about both midlines, consistent with SSSS edges
+
+    Maximum deflection at the centre; zero along edges
+
+    The plotted normalized central value matches the constant within ~0.002 relative error on the finest grid shown
+
+FEM settings behind this plot
+
+    Fine grid n = 40 (i.e., h = 0.025 a)
+
+    Consistent Hermite interpolation for w, θ_x, θ_y
+
+    Uniform load integration with 2 × 2 Gauss points per rectangle
+
+Figure 3 — Filled contour of deflection (FEM, fine mesh)
+
+Deflection contour
+
+Reading the contour
+
+    Concentric contours centred at (a/2, a/2) show a monotone decrease toward edges
+
+    The circular-like pattern in the middle becomes slightly square near edges, a typical feature for SSSS plates under uniform pressure
+
+    Zero contour on every boundary confirms correct enforcement of w = 0
+
+Why both 3D and contour help
+
+    The 3D surface conveys global smoothness and qualitative shape (good for talks)
+
+    The contour makes gradients and symmetry obvious (good for reports/code verification)
+
+5) Numerical table (selected points)
+mesh n	h = a/n	FEM (nd)	series M	Navier (nd)	exact nd
+8	0.125	0.00388	3	0.004152	0.00406235
+12	0.0833	0.00396	5	0.004120	0.00406235
+16	0.0625	0.00402	7	0.004097	0.00406235
+24	0.0417	0.004054	21	0.004067	0.00406235
+40	0.0250	0.004061	41	0.004062	0.00406235
 
 All FEM and Navier values approach the same constant within plotting precision.
+6) Reproduce / run
 
----
+    Navier (Python): Navier_code/navier_solver.py computes the normalized centre deflection for a chosen odd M
 
-## 6) Reproduce / run
+    FEM (placeholder): FEM_code/fem_solver.py shows where to plug in your stiffness/load assembly
 
-- **Navier (Python)**: `Navier_code/navier_solver.py` computes the normalized centre deflection for a chosen odd \(M\).  
-- **FEM (placeholder)**: `FEM_code/fem_solver.py` shows where to plug in your stiffness/load assembly. Any \(C^1\) plate element with Hermite polynomials will reproduce the trends above.
+7) Takeaways
 
----
+    Both methods converge to the classical constant 0.00406235 for SSSS thin plates
 
-## 7) Takeaways
+    FEM tends to underestimate on coarse meshes (numerical stiffness)
 
-1. **Both methods converge** to the classical constant \(0.00406235\) for SSSS thin plates.  
-2. **FEM** tends to **underestimate** on coarse meshes (numerical stiffness), while **Navier** **overestimates** for small \(M\) (truncation).  
-3. The pair of convergence curves is a robust **sanity check** for thin‑plate FEM implementations before moving to thicker plates, orthotropy, or nonlinear effects.
+    Navier tends to overestimate for small M (truncation)
 
----
+    The convergence curves form a robust sanity check for plate FEM codes
 
-## 8) Repository layout
+8) Repository layout
 
-```
 .
 ├── 1.png                 # Convergence (FEM bottom axis vs Navier top axis)
 ├── 2.png                 # 3D deflection surface (FEM fine)
 ├── 3.png                 # Filled deflection contours (FEM fine)
 ├── FEM_code/
-│   └── fem_solver.py     # placeholder for your FEM implementation
+│   └── fem_solver.py
 ├── Navier_code/
-│   └── navier_solver.py  # series benchmark
-├── data/                 # optional: put CSV/txt results here
-├── LICENSE               # MIT
+│   └── navier_solver.py
+├── data/
+├── LICENSE
 ├── .gitignore
-└── README.md             # this file
-```
+└── README.md
