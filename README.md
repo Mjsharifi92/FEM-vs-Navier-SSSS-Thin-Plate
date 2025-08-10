@@ -170,3 +170,23 @@ Both codes are structured for reproducibility and easy extension to more complex
   Mohammadjafar Sharifi (Mj Sharifi)
 
 ---
+---
+
+## Author & Citation
+
+**Author:** Mj Sharifi
+
+If you use this repository, code, or figures in your research or publications, please cite it as:
+
+> Sharifi, Mj. *Convergence Analysis: FEM vs. Navier Solution — SSSS Thin Plate (Steel)*. GitHub repository, 2025.  
+> Available at: https://github.com/Mjsharifi92/FEM-vs-Navier-SSSS-Thin-Plate
+
+**BibTeX**
+```bibtex
+@misc{Sharifi2025_FEM_Navier_SSSS,
+  author  = {Sharifi, Mj},
+  title   = {Convergence Analysis: FEM vs. Navier Solution — SSSS Thin Plate (Steel)},
+  year    = {2025},
+  publisher = {GitHub},
+  url     = {https://github.com/Mjsharifi92/FEM-vs-Navier-SSSS-Thin-Plate}
+}
